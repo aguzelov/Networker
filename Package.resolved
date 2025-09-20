@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "loggable",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/aguzelov/Loggable/",
+      "state" : {
+        "branch" : "main",
+        "revision" : "a75117cc8ad906e9430da1989acf88c102bbd165"
+      }
+    }
+  ],
+  "version" : 2
+}
