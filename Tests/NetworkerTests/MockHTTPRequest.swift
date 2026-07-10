@@ -17,7 +17,6 @@ struct MockHTTPRequest: HTTPRequestProtocol {
 	var parameters: Encodable?
 	var queryParameters: [String: String]?
 	var encoding: HTTPEncoding = .jsonEncoded
-	var isExtendSession: Bool = false
 	var timeoutInterval: TimeInterval = 180
 	var retryPolicy: RetryPolicy = .none
 	var cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy

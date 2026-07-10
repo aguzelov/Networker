@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the package is `0.y.z`, breaking changes may land in any release; see
 each entry below for what actually changed.
 
+## [0.1.1]
+
+### Fixed
+- Fixed a rare crash under concurrent requests caused by `Networker`'s internal session being mutated
+  after initialization. The session is now fixed at `init` and never changes afterward.
+
+### Removed
+- **Breaking:** `HTTPRequestProtocol.isExtendSession`. It had no meaningful effect beyond what
+  `HTTPRequestProtocol.timeoutInterval` (still supported) already provides. Conforming types must
+  remove this requirement.
+
 ## [0.1.0]
 
 ### Added

@@ -16,7 +16,6 @@ public protocol HTTPRequestProtocol {
 	var parameters: Encodable? { get }
 	var queryParameters: [String: String]? { get }
 	var encoding: HTTPEncoding { get }
-	var isExtendSession: Bool { get }
 	var timeoutInterval: TimeInterval { get }
 	var retryPolicy: RetryPolicy { get }
 	var cachePolicy: URLRequest.CachePolicy { get }

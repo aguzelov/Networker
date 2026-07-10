@@ -9,12 +9,9 @@ import Foundation
 import SwiftUI
 
 final public class Networker: NSObject, URLSessionDelegate {
-	private var session: URLSessionProtocol
+	private let session: URLSessionProtocol
 	private let reachability: NetworkReachabilityProvider
-	private let sessionConfig = URLSessionConfiguration.default
 	private let taskRegistry = TaskRegistry()
-
-	private let sessionTimeout = 180 //Move to config
 
 	public init(session: URLSessionProtocol = URLSession.shared, reachability: NetworkReachabilityProvider = NWPathReachability()) {
 		self.session = session
@@ -57,12 +54,6 @@ final public class Networker: NSObject, URLSessionDelegate {
 			urlRequest.setValue($1, forHTTPHeaderField: $0)
 		}
 
-		if request.isExtendSession {
-			sessionConfig.timeoutIntervalForRequest = TimeInterval(sessionTimeout)
-			sessionConfig.timeoutIntervalForResource = TimeInterval(sessionTimeout)
-			session = URLSession(configuration: sessionConfig)
-		}
-
 		let task = Task<Data, Error> {
 			try await self.executeRequestWithRetry(
 				baseRequest: urlRequest,
@@ -96,12 +87,6 @@ final public class Networker: NSObject, URLSessionDelegate {
 		urlRequest.cachePolicy = request.cachePolicy
 		request.headers.forEach {
 			urlRequest.setValue($1, forHTTPHeaderField: $0)
-		}
-
-		if request.isExtendSession {
-			sessionConfig.timeoutIntervalForRequest = TimeInterval(sessionTimeout)
-			sessionConfig.timeoutIntervalForResource = TimeInterval(sessionTimeout)
-			session = URLSession(configuration: sessionConfig)
 		}
 
 		let task = Task<URL, Error> {
