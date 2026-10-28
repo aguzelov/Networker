@@ -14,12 +14,12 @@ struct MockHTTPRequest: HTTPRequestProtocol {
 	var path: String = "/resource"
 	var method: HTTPMethod = .get
 	var headers: [String: String] = [:]
-	var parameters: Encodable?
+	var parameters: (any Encodable & Sendable)?
 	var queryParameters: [String: String]?
 	var encoding: HTTPEncoding = .jsonEncoded
 	var timeoutInterval: TimeInterval = 180
 	var retryPolicy: RetryPolicy = .none
 	var cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy
-	var requestInterceptors: [RequestInterceptor] = []
-	var responseInterceptors: [ResponseInterceptor] = []
+	var requestInterceptors: [any RequestInterceptor] = []
+	var responseInterceptors: [any ResponseInterceptor] = []
 }

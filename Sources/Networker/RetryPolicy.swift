@@ -7,8 +7,8 @@
 
 import Foundation
 
-public struct RetryPolicy {
-	public enum Backoff {
+public struct RetryPolicy: Sendable {
+	public enum Backoff: Sendable {
 		case none
 		case fixed(delay: TimeInterval)
 		case exponential(baseDelay: TimeInterval, multiplier: Double = 2.0, maxDelay: TimeInterval = 30)

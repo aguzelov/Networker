@@ -9,19 +9,23 @@ import Foundation
 @testable import Networker
 
 final class MockRequestLogger: RequestLoggerProtocol {
-	private(set) var loggedRequests: [(URLRequest, UUID)] = []
-	private(set) var loggedDataResponses: [(URLResponse, UUID, Data)] = []
-	private(set) var loggedURLResponses: [(URLResponse, UUID, URL)] = []
+	private let requests = Locked<[(URLRequest, UUID)]>([])
+	private let dataResponses = Locked<[(URLResponse, UUID, Data)]>([])
+	private let urlResponses = Locked<[(URLResponse, UUID, URL)]>([])
+
+	var loggedRequests: [(URLRequest, UUID)] { requests.value }
+	var loggedDataResponses: [(URLResponse, UUID, Data)] { dataResponses.value }
+	var loggedURLResponses: [(URLResponse, UUID, URL)] { urlResponses.value }
 
 	func log(_ request: URLRequest, with requestID: UUID) {
-		loggedRequests.append((request, requestID))
+		requests.withValue { $0.append((request, requestID)) }
 	}
 
 	func log(_ response: URLResponse, for requestID: UUID, with data: Data) {
-		loggedDataResponses.append((response, requestID, data))
+		dataResponses.withValue { $0.append((response, requestID, data)) }
 	}
 
 	func log(_ response: URLResponse, for requestID: UUID, with url: URL) {
-		loggedURLResponses.append((response, requestID, url))
+		urlResponses.withValue { $0.append((response, requestID, url)) }
 	}
 }

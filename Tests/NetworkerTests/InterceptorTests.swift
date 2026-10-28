@@ -10,14 +10,14 @@ import XCTest
 
 private final class RecordingRequestInterceptor: RequestInterceptor {
 	let tag: String
-	static var callOrder: [String] = []
+	static let callOrder = Locked<[String]>([])
 
 	init(tag: String) {
 		self.tag = tag
 	}
 
-	func intercept(_ urlRequest: URLRequest, for request: HTTPRequestProtocol) async throws -> URLRequest {
-		Self.callOrder.append(tag)
+	func intercept(_ urlRequest: URLRequest, for request: any HTTPRequestProtocol) async throws -> URLRequest {
+		Self.callOrder.withValue { $0.append(tag) }
 		var urlRequest = urlRequest
 		urlRequest.setValue(tag, forHTTPHeaderField: "X-\(tag)")
 		return urlRequest
@@ -25,7 +25,7 @@ private final class RecordingRequestInterceptor: RequestInterceptor {
 }
 
 private struct RecordingResponseInterceptor: ResponseInterceptor {
-	func intercept(_ data: Data, _ response: URLResponse, for request: HTTPRequestProtocol) async throws -> (Data, URLResponse) {
+	func intercept(_ data: Data, _ response: URLResponse, for request: any HTTPRequestProtocol) async throws -> (Data, URLResponse) {
 		let transformed = data + "-transformed".data(using: .utf8)!
 		return (transformed, response)
 	}
@@ -34,7 +34,7 @@ private struct RecordingResponseInterceptor: ResponseInterceptor {
 final class InterceptorTests: XCTestCase {
 	override func setUp() {
 		super.setUp()
-		RecordingRequestInterceptor.callOrder = []
+		RecordingRequestInterceptor.callOrder.value = []
 	}
 
 	func testRequestInterceptorsRunInOrderAndMutateHeaders() async throws {
@@ -52,7 +52,7 @@ final class InterceptorTests: XCTestCase {
 
 		_ = try await networker.request(request: request, logger: nil)
 
-		XCTAssertEqual(RecordingRequestInterceptor.callOrder, ["first", "second"])
+		XCTAssertEqual(RecordingRequestInterceptor.callOrder.value, ["first", "second"])
 		let sent = try XCTUnwrap(session.recordedRequests.first)
 		XCTAssertEqual(sent.value(forHTTPHeaderField: "X-first"), "first")
 		XCTAssertEqual(sent.value(forHTTPHeaderField: "X-second"), "second")
