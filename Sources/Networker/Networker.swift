@@ -9,13 +9,55 @@ import Foundation
 
 final public class Networker: NSObject, URLSessionDelegate, Sendable {
 	private let session: any URLSessionProtocol
+	private let webSocketSession: any WebSocketSessionProtocol
 	private let reachability: any NetworkReachabilityProvider
 	private let taskRegistry = TaskRegistry()
 
-	public init(session: any URLSessionProtocol = URLSession.shared, reachability: any NetworkReachabilityProvider = NWPathReachability()) {
+	public init(
+		session: any URLSessionProtocol = URLSession.shared,
+		webSocketSession: any WebSocketSessionProtocol = URLSession.shared,
+		reachability: any NetworkReachabilityProvider = NWPathReachability()
+	) {
 		self.session = session
+		self.webSocketSession = webSocketSession
 		self.reachability = reachability
 		super.init()
+	}
+
+	/// Opens a WebSocket for `request`: its URL (`http`/`https` become `ws`/`wss`), query parameters, headers and
+	/// request interceptors apply as for any request, so e.g. an auth interceptor works unchanged. `method`, body,
+	/// retry and cache policy don't apply to a WebSocket upgrade.
+	///
+	/// Returns as soon as the connection starts; whether the server accepted it shows up on `messages`.
+	public func webSocket(request: any HTTPRequestProtocol, logger: (any RequestLoggerProtocol)? = nil) async throws -> WebSocketConnection {
+		if !reachability.isNetworkAvailable() {
+			throw NetworkingError.networkNotAvailable
+		}
+
+		guard var components = URLComponents(string: request.baseURL + request.path) else {
+			throw NetworkingError.invalidURL(request.path)
+		}
+		switch components.scheme {
+			case "http": components.scheme = "ws"
+			case "https": components.scheme = "wss"
+			default: break
+		}
+		if let queryParameters = request.queryParameters, !queryParameters.isEmpty {
+			components.queryItems = queryParameters.map { URLQueryItem(name: $0.key, value: $0.value) }
+		}
+		guard let url = components.url else { throw NetworkingError.invalidURL(request.path) }
+
+		var urlRequest = URLRequest(url: url)
+		urlRequest.timeoutInterval = request.timeoutInterval
+		request.headers.forEach {
+			urlRequest.setValue($1, forHTTPHeaderField: $0)
+		}
+		for interceptor in request.requestInterceptors {
+			urlRequest = try await interceptor.intercept(urlRequest, for: request)
+		}
+		logger?.log(urlRequest, with: request.id)
+
+		return WebSocketConnection(task: webSocketSession.makeWebSocketTask(with: urlRequest))
 	}
 
 	public func cancel(id: UUID) {

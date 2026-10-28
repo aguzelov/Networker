@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the package is `0.y.z`, breaking changes may land in any release; see
 each entry below for what actually changed.
 
+## [0.3.0]
+
+### Added
+- WebSockets: `Networker.webSocket(request:logger:)` opens a WebSocket for any `HTTPRequestProtocol`. The
+  request's URL (`http`/`https` become `ws`/`wss`), query parameters, headers and request interceptors apply
+  as for any request, so e.g. an auth interceptor works unchanged.
+- `WebSocketConnection`: incoming messages as an `AsyncThrowingStream<WebSocketMessage, Error>`, plus
+  `send(_:)`, `ping()` and `close()`. The stream finishes normally after `close()`, and with
+  `NetworkingError.badStatus` when the server refuses the handshake (e.g. `401`) or `.transport` when the
+  connection drops. There is no automatic reconnect: retrying is the app's decision.
+- `WebSocketSessionProtocol` / `WebSocketTaskProtocol`: injectable seams for tests (`URLSession` and
+  `URLSessionWebSocketTask` conform), passed as the new `webSocketSession:` parameter of `Networker.init`
+  (defaults to `URLSession.shared`, so existing call sites compile unchanged).
+
+## [0.2.0]
+
+### Changed
+- **Breaking:** Swift 6 language mode (tools version 6.0). The public protocols, enums and `Networker` are
+  `Sendable`, and `HTTPRequestProtocol.parameters` is `(any Encodable & Sendable)?`. Conforming types that
+  aren't `Sendable` (e.g. mutable classes) need changes.
+
+### Removed
+- The unused `SwiftUI` import.
+
 ## [0.1.1]
 
 ### Fixed
