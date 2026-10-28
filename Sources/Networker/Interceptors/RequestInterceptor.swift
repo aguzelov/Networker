@@ -7,6 +7,6 @@
 
 import Foundation
 
-public protocol RequestInterceptor {
-	func intercept(_ urlRequest: URLRequest, for request: HTTPRequestProtocol) async throws -> URLRequest
+public protocol RequestInterceptor: Sendable {
+	func intercept(_ urlRequest: URLRequest, for request: any HTTPRequestProtocol) async throws -> URLRequest
 }

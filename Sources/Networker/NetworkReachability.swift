@@ -7,7 +7,7 @@ import Foundation
 import Network
 import os
 
-public protocol NetworkReachabilityProvider {
+public protocol NetworkReachabilityProvider: Sendable {
 	func isNetworkAvailable() -> Bool
 }
 

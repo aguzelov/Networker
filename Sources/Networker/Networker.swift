@@ -6,14 +6,13 @@
 //
 
 import Foundation
-import SwiftUI
 
-final public class Networker: NSObject, URLSessionDelegate {
-	private let session: URLSessionProtocol
-	private let reachability: NetworkReachabilityProvider
+final public class Networker: NSObject, URLSessionDelegate, Sendable {
+	private let session: any URLSessionProtocol
+	private let reachability: any NetworkReachabilityProvider
 	private let taskRegistry = TaskRegistry()
 
-	public init(session: URLSessionProtocol = URLSession.shared, reachability: NetworkReachabilityProvider = NWPathReachability()) {
+	public init(session: any URLSessionProtocol = URLSession.shared, reachability: any NetworkReachabilityProvider = NWPathReachability()) {
 		self.session = session
 		self.reachability = reachability
 		super.init()
@@ -27,7 +26,7 @@ final public class Networker: NSObject, URLSessionDelegate {
 		Task { await taskRegistry.cancelAll() }
 	}
 
-	public func request(request: HTTPRequestProtocol, logger: RequestLoggerProtocol?) async throws -> Data {
+	public func request(request: any HTTPRequestProtocol, logger: (any RequestLoggerProtocol)?) async throws -> Data {
 
 		let urlString = request.baseURL + request.path
 		guard var url = URL(string: urlString) else { throw NetworkingError.invalidURL(request.path) }
@@ -54,7 +53,7 @@ final public class Networker: NSObject, URLSessionDelegate {
 			urlRequest.setValue($1, forHTTPHeaderField: $0)
 		}
 
-		let task = Task<Data, Error> {
+		let task = Task<Data, any Error> {
 			try await self.executeRequestWithRetry(
 				baseRequest: urlRequest,
 				policy: request.retryPolicy,
@@ -78,7 +77,7 @@ final public class Networker: NSObject, URLSessionDelegate {
 		}
 	}
 
-	public func download(request: HTTPRequestProtocol, destinationURL: URL, logger: RequestLoggerProtocol?) async throws -> URL {
+	public func download(request: any HTTPRequestProtocol, destinationURL: URL, logger: (any RequestLoggerProtocol)?) async throws -> URL {
 		let urlString = request.baseURL + request.path
 		guard let requestURL = URL(string: urlString) else { throw NetworkingError.invalidURL(request.path) }
 
@@ -89,7 +88,7 @@ final public class Networker: NSObject, URLSessionDelegate {
 			urlRequest.setValue($1, forHTTPHeaderField: $0)
 		}
 
-		let task = Task<URL, Error> {
+		let task = Task<URL, any Error> {
 			try await self.executeDownloadWithRetry(
 				baseRequest: urlRequest,
 				policy: request.retryPolicy,
@@ -118,8 +117,8 @@ final public class Networker: NSObject, URLSessionDelegate {
 		baseRequest: URLRequest,
 		policy: RetryPolicy,
 		requestID: UUID,
-		originalRequest: HTTPRequestProtocol,
-		logger: RequestLoggerProtocol?
+		originalRequest: any HTTPRequestProtocol,
+		logger: (any RequestLoggerProtocol)?
 	) async throws -> Data {
 		var attempt = 1
 		while true {
@@ -171,9 +170,9 @@ final public class Networker: NSObject, URLSessionDelegate {
 		baseRequest: URLRequest,
 		policy: RetryPolicy,
 		requestID: UUID,
-		originalRequest: HTTPRequestProtocol,
+		originalRequest: any HTTPRequestProtocol,
 		destinationURL: URL,
-		logger: RequestLoggerProtocol?
+		logger: (any RequestLoggerProtocol)?
 	) async throws -> URL {
 		var attempt = 1
 		while true {

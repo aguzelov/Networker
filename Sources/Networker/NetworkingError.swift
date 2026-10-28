@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum NetworkingError: Error {
+public enum NetworkingError: Error, Sendable {
 	case invalidURL(String)
 	case networkNotAvailable
 	case transport(URLError)

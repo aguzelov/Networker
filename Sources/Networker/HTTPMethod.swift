@@ -7,12 +7,12 @@
 
 import Foundation
 
-public enum HTTPEncoding {
+public enum HTTPEncoding: Sendable {
 	case urlFormEncoded
 	case jsonEncoded
 }
 
-public enum HTTPMethod: String {
+public enum HTTPMethod: String, Sendable {
 	case get
 	case post
 	case put
