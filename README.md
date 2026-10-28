@@ -20,6 +20,8 @@ executes what the request tells it to do.
 - **Cancellation by identity** — cancel any in-flight request via `Networker.cancel(id:)`, using
   the same `id` the request already carries, or stop everything with `cancelAll()`.
 - **Downloads** — `download(request:destinationURL:logger:)` streams a response straight to disk.
+- **WebSockets** — `webSocket(request:)` opens a connection from the same kind of request (URL, headers,
+  interceptors), with incoming messages as an `AsyncThrowingStream`.
 - **Pluggable logging** — pass any `RequestLoggerProtocol` conformer to observe outgoing requests
   and incoming responses; logging is entirely opt-in and owned by the caller.
 - **Reachability-aware** — requests fail fast with `.networkNotAvailable` when there's no
@@ -69,6 +71,22 @@ Downloads follow the same shape:
 
 ```swift
 let fileURL = try await networker.download(request: request, destinationURL: destination, logger: nil)
+```
+
+Open a WebSocket from a request the same way. Interceptors run on the upgrade request, so an auth header
+interceptor works unchanged:
+
+```swift
+let connection = try await networker.webSocket(request: LiveUpdates())
+Task {
+    for try await message in connection.messages {
+        if case .text(let json) = message { handle(json) }
+    }
+    // Finished normally after connection.close(); throws NetworkingError when the connection fails
+    // (.badStatus(401, …) for a refused handshake, .transport when it drops). Reconnecting is up to you.
+}
+try await connection.send(.text("hello"))
+connection.close()
 ```
 
 Cancel by request identity when needed:
